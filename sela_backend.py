@@ -4,6 +4,7 @@
 # ثم: uvicorn sela_backend:app --reload
 
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, DateTime
 from sqlalchemy.ext.declarative import declarative_base
@@ -26,27 +27,27 @@ class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
-    phone = Column(String, unique=True, index=True) # رقم الواتساب
-    country = Column(String) # بلد المغترب
-    balance = Column(Float, default=0.0) # رصيده في التطبيق
+    phone = Column(String, unique=True, index=True)
+    country = Column(String)
+    balance = Column(Float, default=0.0)
 
 class Merchant(Base):
     __tablename__ = "merchants"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     phone = Column(String, unique=True, index=True)
-    location = Column(String) # الولاية/المدينة في السودان
-    is_verified = Column(Boolean, default=False) # هل التاجر موثوق؟
+    location = Column(String)
+    is_verified = Column(Boolean, default=False)
 
 class Transaction(Base):
     __tablename__ = "transactions"
     id = Column(Integer, primary_key=True, index=True)
-    sender_id = Column(Integer) # ID المغترب
-    merchant_id = Column(Integer) # ID التاجر
+    sender_id = Column(Integer)
+    merchant_id = Column(Integer)
     amount = Column(Float)
-    service_details = Column(String) # تفاصيل الخدمة (مثلاً: دواء، رسوم مدرسة)
-    receipt_url = Column(String, nullable=True) # رابط صورة الفاتورة
-    status = Column(String, default="pending") # pending, approved, completed, rejected
+    service_details = Column(String)
+    receipt_url = Column(String, nullable=True)
+    status = Column(String, default="pending")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 Base.metadata.create_all(bind=engine)
@@ -71,12 +72,20 @@ class TransactionCreate(BaseModel):
     service_details: str
 
 class TransactionUpdate(BaseModel):
-    status: str # approved, rejected, completed
+    status: str
 
 # ==========================================
-# 4. إعداد التطبيق
+# 4. إعداد التطبيق والـ CORS
 # ==========================================
 app = FastAPI(title="Sela API", description="واجهة برمجة تطبيقات صلة للتحويلات العكسية")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def get_db():
     db = SessionLocal()
@@ -89,24 +98,19 @@ def get_db():
 # 5. دوال الذكاء الاصطناعي والواتساب (Mock/Placeholder)
 # ==========================================
 def verify_receipt_with_ai(receipt_url: str) -> bool:
-    """دالة محاكاة للذكاء الاصطناعي للتحقق من الفواتير"""
-    # هنا يتم ربط API حقيقي للذكاء الاصطناعي لاحقاً
     print(f"🤖 جاري تحليل الفاتورة: {receipt_url}")
-    return True # نفترض أنها صحيحة للمشروع الأولي
+    return True
 
 def send_whatsapp_notification(phone: str, message: str):
-    """دالة محاكاة لإرسال رسائل الواتساب"""
     print(f"📱 رسالة واتساب إلى {phone}: {message}")
 
 # ==========================================
 # 6. نقاط النهاية (API Endpoints)
 # ==========================================
-
 @app.get("/")
 def home():
     return {"message": "مرحباً بك في API منصة صلة (Sela)"}
 
-# --- تسجيل المستخدمين والتجار ---
 @app.post("/register/user")
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.phone == user.phone).first()
@@ -129,7 +133,6 @@ def register_merchant(merchant: MerchantCreate, db: Session = Depends(get_db)):
     db.refresh(new_merchant)
     return {"message": "تم تسجيل التاجر بنجاح", "merchant_id": new_merchant.id}
 
-# --- إنشاء عملية دفع (من المغترب للتاجر) ---
 @app.post("/create-transaction")
 def create_transaction(tx: TransactionCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     sender = db.query(User).filter(User.phone == tx.sender_phone).first()
@@ -138,7 +141,6 @@ def create_transaction(tx: TransactionCreate, background_tasks: BackgroundTasks,
     if not sender or not merchant:
         raise HTTPException(status_code=404, detail="المغترب أو التاجر غير موجود")
     
-    # خصم المبلغ من محفظة المغترب (محاكاة)
     if sender.balance < tx.amount:
         raise HTTPException(status_code=400, detail="الرصيد غير كافٍ. يرجى إيداع المبلغ أولاً.")
     
@@ -155,7 +157,6 @@ def create_transaction(tx: TransactionCreate, background_tasks: BackgroundTasks,
     db.commit()
     db.refresh(new_tx)
     
-    # إرسال إشعار واتساب للتاجر في الخلفية
     background_tasks.add_task(
         send_whatsapp_notification, 
         merchant.phone, 
@@ -164,7 +165,6 @@ def create_transaction(tx: TransactionCreate, background_tasks: BackgroundTasks,
     
     return {"message": "تم إنشاء طلب الدفع بنجاح", "transaction_id": new_tx.id, "status": new_tx.status}
 
-# --- تأكيد التاجر للعملية (إرفاق الفاتورة) ---
 @app.post("/confirm-transaction/{tx_id}")
 def confirm_transaction(tx_id: int, receipt_url: str, db: Session = Depends(get_db)):
     tx = db.query(Transaction).filter(Transaction.id == tx_id).first()
@@ -172,8 +172,6 @@ def confirm_transaction(tx_id: int, receipt_url: str, db: Session = Depends(get_
         raise HTTPException(status_code=404, detail="العملية غير موجودة")
     
     tx.receipt_url = receipt_url
-    
-    # استخدام الذكاء الاصطناعي للتحقق من الفاتورة
     is_valid = verify_receipt_with_ai(receipt_url)
     if is_valid:
         tx.status = "completed"
@@ -184,13 +182,11 @@ def confirm_transaction(tx_id: int, receipt_url: str, db: Session = Depends(get_
         
     db.commit()
     
-    # إشعار المغترب
     sender = db.query(User).filter(User.id == tx.sender_id).first()
     send_whatsapp_notification(sender.phone, f"تمت عملية الدفع الخاصة بك: {message}")
     
     return {"message": message, "status": tx.status}
 
-# --- استعلام عن العمليات ---
 @app.get("/transactions/{user_phone}")
 def get_user_transactions(user_phone: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.phone == user_phone).first()
