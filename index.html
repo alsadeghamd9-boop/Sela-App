@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صلة - تطبيق المغترب السوداني</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; }
+        .app-container { max-width: 400px; margin: 0 auto; background-color: white; min-height: 100vh; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .tab-active { border-bottom: 3px solid #16a34a; color: #16a34a; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="bg-green-600 text-white p-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold">تطبيق صلة</h1>
+            <span class="text-sm">أهلاً بك، أحمد</span>
+        </header>
+
+        <div class="p-4">
+            <div class="bg-green-100 rounded-lg p-4 text-center border border-green-300">
+                <p class="text-green-800 text-sm">رصيدك الحالي</p>
+                <p class="text-2xl font-bold text-green-900">$ 150.00</p>
+                <button onclick="alert('سيتم توجيهك لبوابة الدفع قريباً')" class="mt-2 bg-green-600 text-white px-4 py-1 rounded-full text-sm hover:bg-green-700 transition">إيداع أموال</button>
+            </div>
+        </div>
+
+        <div class="flex justify-around border-b">
+            <button onclick="showTab('home')" id="tab-home" class="py-3 px-4 font-semibold tab-active">الرئيسية</button>
+            <button onclick="showTab('history')" id="tab-history" class="py-3 px-4 font-semibold text-gray-500">السجل</button>
+        </div>
+
+        <div id="content-home" class="p-4">
+            <h2 class="text-lg font-bold mb-3 text-gray-700">التجار القريبون من أهلك</h2>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center border p-3 rounded-lg shadow-sm">
+                    <div>
+                        <p class="font-bold text-gray-800">صيدلية الشفاء</p>
+                        <p class="text-sm text-gray-500">بورتسودان - حي الترانسيت</p>
+                    </div>
+                    <button onclick="payMerchant('صيدلية الشفاء')" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">دفع</button>
+                </div>
+                <div class="flex justify-between items-center border p-3 rounded-lg shadow-sm">
+                    <div>
+                        <p class="font-bold text-gray-800">مدرسة النيل الأزرق</p>
+                        <p class="text-sm text-gray-500">أم درمان - حي الملازمين</p>
+                    </div>
+                    <button onclick="payMerchant('مدرسة النيل الأزرق')" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">دفع</button>
+                </div>
+                <div class="flex justify-between items-center border p-3 rounded-lg shadow-sm">
+                    <div>
+                        <p class="font-bold text-gray-800">سوبرماركت البركة</p>
+                        <p class="text-sm text-gray-500">الخرطوم - الرياض</p>
+                    </div>
+                    <button onclick="payMerchant('سوبرماركت البركة')" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">دفع</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="content-history" class="p-4 hidden">
+            <h2 class="text-lg font-bold mb-3 text-gray-700">سجل العمليات</h2>
+            <div class="space-y-3">
+                <div class="border p-3 rounded-lg bg-gray-50">
+                    <div class="flex justify-between">
+                        <span class="font-bold text-green-700">صيدلية الشفاء</span>
+                        <span class="text-red-500 font-bold">-$ 25.00</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">تم الدفع بنجاح - اليوم 10:30 ص</p>
+                </div>
+                <div class="border p-3 rounded-lg bg-gray-50">
+                    <div class="flex justify-between">
+                        <span class="font-bold text-green-700">مدرسة النيل الأزرق</span>
+                        <span class="text-red-500 font-bold">-$ 50.00</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">تم الدفع بنجاح - أمس 02:15 م</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            document.getElementById('content-home').classList.add('hidden');
+            document.getElementById('content-history').classList.add('hidden');
+            document.getElementById('tab-home').classList.remove('tab-active');
+            document.getElementById('tab-history').classList.remove('tab-active');
+
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+            document.getElementById('tab-' + tabName).classList.add('tab-active');
+        }
+
+        function payMerchant(merchantName) {
+            alert(`جاري تحويلك لصفحة الدفع للتاجر: ${merchantName}`);
+        }
+    </script>
+</body>
+                  </html>
