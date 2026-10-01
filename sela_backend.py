@@ -74,6 +74,10 @@ class TransactionCreate(BaseModel):
 class TransactionUpdate(BaseModel):
     status: str
 
+class DepositRequest(BaseModel):
+    phone: str
+    amount: float
+
 # ==========================================
 # 4. إعداد التطبيق والـ CORS
 # ==========================================
@@ -132,6 +136,15 @@ def register_merchant(merchant: MerchantCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_merchant)
     return {"message": "تم تسجيل التاجر بنجاح", "merchant_id": new_merchant.id}
+
+@app.post("/deposit")
+def deposit(request: DepositRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.phone == request.phone).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    user.balance += request.amount
+    db.commit()
+    return {"message": f"تم إيداع {request.amount} بنجاح", "new_balance": user.balance}
 
 @app.post("/create-transaction")
 def create_transaction(tx: TransactionCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
