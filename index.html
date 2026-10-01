@@ -39,21 +39,14 @@
                         <p class="font-bold text-gray-800">صيدلية الشفاء</p>
                         <p class="text-sm text-gray-500">بورتسودان - حي الترانسيت</p>
                     </div>
-                    <button onclick="payMerchant('صيدلية الشفاء')" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">دفع</button>
+                    <button onclick="payMerchant('صيدلية الشفاء', '123456')" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">دفع</button>
                 </div>
                 <div class="flex justify-between items-center border p-3 rounded-lg shadow-sm">
                     <div>
                         <p class="font-bold text-gray-800">مدرسة النيل الأزرق</p>
                         <p class="text-sm text-gray-500">أم درمان - حي الملازمين</p>
                     </div>
-                    <button onclick="payMerchant('مدرسة النيل الأزرق')" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">دفع</button>
-                </div>
-                <div class="flex justify-between items-center border p-3 rounded-lg shadow-sm">
-                    <div>
-                        <p class="font-bold text-gray-800">سوبرماركت البركة</p>
-                        <p class="text-sm text-gray-500">الخرطوم - الرياض</p>
-                    </div>
-                    <button onclick="payMerchant('سوبرماركت البركة')" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">دفع</button>
+                    <button onclick="payMerchant('مدرسة النيل الأزرق', '654321')" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">دفع</button>
                 </div>
             </div>
         </div>
@@ -68,18 +61,12 @@
                     </div>
                     <p class="text-xs text-gray-500 mt-1">تم الدفع بنجاح - اليوم 10:30 ص</p>
                 </div>
-                <div class="border p-3 rounded-lg bg-gray-50">
-                    <div class="flex justify-between">
-                        <span class="font-bold text-green-700">مدرسة النيل الأزرق</span>
-                        <span class="text-red-500 font-bold">-$ 50.00</span>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-1">تم الدفع بنجاح - أمس 02:15 م</p>
-                </div>
             </div>
         </div>
     </div>
 
     <script>
+        // دالة التبديل بين التبويبات
         function showTab(tabName) {
             document.getElementById('content-home').classList.add('hidden');
             document.getElementById('content-history').classList.add('hidden');
@@ -90,9 +77,42 @@
             document.getElementById('tab-' + tabName).classList.add('tab-active');
         }
 
-        function payMerchant(merchantName) {
-            alert(`جاري تحويلك لصفحة الدفع للتاجر: ${merchantName}`);
+        // دالة الدفع الحقيقية اللي بتكلم السيرفر
+        async function payMerchant(merchantName, merchantPhone) {
+            // رابط السيرفر بتاعك
+            const SERVER_URL = "https://sela-app-4gm2.onrender.com/create-transaction";
+            
+            // بيانات تجريبية للمغترب (عشان نجرب)
+            const transactionData = {
+                sender_phone: "123456789", // رقم مغترب وهمي (لازم يكون مسجل في السيرفر)
+                merchant_phone: merchantPhone,
+                amount: 25.00,
+                service_details: "دفع لـ " + merchantName
+            };
+
+            try {
+                alert("جاري إرسال طلب الدفع للسيرفر...");
+                
+                const response = await fetch(SERVER_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(transactionData)
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert("✅ تم إنشاء طلب الدفع بنجاح! رقم العملية: " + data.transaction_id);
+                } else {
+                    alert("❌ حصل خطأ: " + data.detail);
+                }
+            } catch (error) {
+                alert("❌ فشل الاتصال بالسيرفر. تأكد من الإنترنت.");
+                console.error(error);
+            }
         }
     </script>
 </body>
-                  </html>
+</html>
